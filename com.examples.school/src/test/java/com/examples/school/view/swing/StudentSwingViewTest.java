@@ -1,14 +1,5 @@
 package com.examples.school.view.swing;
 
-import org.assertj.swing.junit.runner.GUITestRunner;
-import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import com.examples.school.controller.SchoolController;
-import com.examples.school.model.Student;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
@@ -23,12 +14,22 @@ import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
+import org.assertj.swing.junit.runner.GUITestRunner;
+import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import com.examples.school.controller.SchoolController;
+
+import com.examples.school.model.Student;
 
 @RunWith(GUITestRunner.class)
 public class StudentSwingViewTest extends AssertJSwingJUnitTestCase {
 
 	private FrameFixture window;
+
 	private StudentSwingView studentSwingView;
 
 	@Mock
@@ -48,8 +49,12 @@ public class StudentSwingViewTest extends AssertJSwingJUnitTestCase {
 		window.show(); // shows the frame to test
 	}
 
-	@Test
-	@GUITest
+	@Override
+	protected void onTearDown() throws Exception {
+		closeable.close();
+	}
+
+	@Test @GUITest
 	public void testControlsInitialStates() {
 		window.label(JLabelMatcher.withText("id"));
 		window.textBox("idTextBox").requireEnabled();
@@ -83,7 +88,6 @@ public class StudentSwingViewTest extends AssertJSwingJUnitTestCase {
 		idTextBox.enterText(" ");
 		nameTextBox.enterText("test");
 		window.button(JButtonMatcher.withText("Add")).requireDisabled();
-
 	}
 
 	@Test
@@ -100,24 +104,54 @@ public class StudentSwingViewTest extends AssertJSwingJUnitTestCase {
 	public void testsShowAllStudentsShouldAddStudentDescriptionsToTheList() {
 		Student student1 = new Student("1", "test1");
 		Student student2 = new Student("2", "test2");
-		GuiActionRunner.execute(() -> studentSwingView.showAllStudents(Arrays.asList(student1, student2)));
+		GuiActionRunner.execute(
+			() -> studentSwingView.showAllStudents(
+					Arrays.asList(student1, student2))
+		);
 		String[] listContents = window.list().contents();
-		assertThat(listContents).containsExactly(student1.toString(), student2.toString());
+		assertThat(listContents)
+			.containsExactly("1 - test1", "2 - test2");
 	}
 
 	@Test
 	public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
 		Student student = new Student("1", "test1");
-		GuiActionRunner.execute(() -> studentSwingView.showError("error message", student));
-		window.label("errorMessageLabel").requireText("error message: " + student);
+		GuiActionRunner.execute(
+			() -> studentSwingView.showError("error message", student)
+		);
+		window.label("errorMessageLabel")
+			.requireText("error message: 1 - test1");
+	}
+
+	@Test
+	public void testShowErrorStudentNotFound() {
+		// setup
+		Student student1 = new Student("1", "test1");
+		Student student2 = new Student("2", "test2");
+		GuiActionRunner.execute(
+			() -> {
+				DefaultListModel<Student> listStudentsModel = studentSwingView.getListStudentsModel();
+				listStudentsModel.addElement(student1);
+				listStudentsModel.addElement(student2);
+			}
+		);
+		GuiActionRunner.execute(
+			() -> studentSwingView.showErrorStudentNotFound("error message", student1)
+		);
+		window.label("errorMessageLabel")
+			.requireText("error message: 1 - test1");
+		assertThat(window.list().contents())
+			.containsExactly("2 - test2");
 	}
 
 	@Test
 	public void testStudentAddedShouldAddTheStudentToTheListAndResetTheErrorLabel() {
-		Student student = new Student("1", "test1");
-		GuiActionRunner.execute(() -> studentSwingView.studentAdded(new Student("1", "test1")));
+		GuiActionRunner.execute(
+				() ->
+				studentSwingView.studentAdded(new Student("1", "test1"))
+				);
 		String[] listContents = window.list().contents();
-		assertThat(listContents).containsExactly(student.toString());
+		assertThat(listContents).containsExactly("1 - test1");
 		window.label("errorMessageLabel").requireText(" ");
 	}
 
@@ -126,18 +160,22 @@ public class StudentSwingViewTest extends AssertJSwingJUnitTestCase {
 		// setup
 		Student student1 = new Student("1", "test1");
 		Student student2 = new Student("2", "test2");
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<Student> listStudentsModel = studentSwingView.getListStudentsModel();
-			listStudentsModel.addElement(student1);
-			listStudentsModel.addElement(student2);
-		});
+		GuiActionRunner.execute(
+			() -> {
+				DefaultListModel<Student> listStudentsModel = studentSwingView.getListStudentsModel();
+				listStudentsModel.addElement(student1);
+				listStudentsModel.addElement(student2);
+			}
+		);
 		// execute
-		GuiActionRunner.execute(() -> studentSwingView.studentRemoved(new Student("1", "test1")));
+		GuiActionRunner.execute(
+			() ->
+			studentSwingView.studentRemoved(new Student("1", "test1"))
+		);
 		// verify
 		String[] listContents = window.list().contents();
-		assertThat(listContents).containsExactly(student2.toString());
+		assertThat(listContents).containsExactly("2 - test2");
 		window.label("errorMessageLabel").requireText(" ");
-
 	}
 
 	@Test
@@ -152,19 +190,16 @@ public class StudentSwingViewTest extends AssertJSwingJUnitTestCase {
 	public void testDeleteButtonShouldDelegateToSchoolControllerDeleteStudent() {
 		Student student1 = new Student("1", "test1");
 		Student student2 = new Student("2", "test2");
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<Student> listStudentsModel = studentSwingView.getListStudentsModel();
-			listStudentsModel.addElement(student1);
-			listStudentsModel.addElement(student2);
-		});
+		GuiActionRunner.execute(
+			() -> {
+				DefaultListModel<Student> listStudentsModel = studentSwingView.getListStudentsModel();
+				listStudentsModel.addElement(student1);
+				listStudentsModel.addElement(student2);
+			}
+		);
 		window.list("studentList").selectItem(1);
 		window.button(JButtonMatcher.withText("Delete Selected")).click();
 		verify(schoolController).deleteStudent(student2);
 	}
-
-	@Override
-	protected void onTearDown() throws Exception {
-		closeable.close();
-	}
-
+	
 }

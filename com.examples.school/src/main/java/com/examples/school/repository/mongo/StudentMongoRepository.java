@@ -5,7 +5,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -19,8 +18,8 @@ public class StudentMongoRepository implements StudentRepository {
 	public static final String STUDENT_COLLECTION_NAME = "student";
 	private MongoCollection<Document> studentCollection;
 
-	public StudentMongoRepository(MongoClient client) {
-		studentCollection = client.getDatabase(SCHOOL_DB_NAME).getCollection(STUDENT_COLLECTION_NAME);
+	public StudentMongoRepository(MongoClient client, String databaseName, String collectionName) {
+		studentCollection = client.getDatabase(databaseName).getCollection(collectionName);
 	}
 
 	@Override

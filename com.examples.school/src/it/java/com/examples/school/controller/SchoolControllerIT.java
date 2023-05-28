@@ -1,8 +1,9 @@
 package com.examples.school.controller;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static java.util.Arrays.asList;
+import static com.examples.school.repository.mongo.StudentMongoRepository.SCHOOL_DB_NAME;
+import static com.examples.school.repository.mongo.StudentMongoRepository.STUDENT_COLLECTION_NAME;
 
 import org.junit.After;
 import org.junit.Before;
@@ -15,7 +16,6 @@ import com.examples.school.repository.StudentRepository;
 import com.examples.school.repository.mongo.StudentMongoRepository;
 import com.examples.school.view.StudentView;
 import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
 
 public class SchoolControllerIT {
 
@@ -29,7 +29,7 @@ public class SchoolControllerIT {
 	@Before
 	public void setUp() {
 		closeable = MockitoAnnotations.openMocks(this);
-		studentRepository = new StudentMongoRepository(new MongoClient(new ServerAddress("localhost", mongoPort)));
+		studentRepository = new StudentMongoRepository(new MongoClient("localhost", mongoPort), SCHOOL_DB_NAME, STUDENT_COLLECTION_NAME);
 		// explicit empty the database through the repository
 		for (Student student : studentRepository.findAll()) {
 			studentRepository.delete(student.getId());

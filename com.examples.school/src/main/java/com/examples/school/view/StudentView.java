@@ -8,4 +8,5 @@ public interface StudentView {
     void showError(String message, Student student);
 	void studentAdded(Student student);
 	void studentRemoved(Student student);
+	void showErrorStudentNotFound(String message, Student student);
 }

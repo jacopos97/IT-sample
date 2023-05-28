@@ -49,7 +49,7 @@ public class StudentMongoRepositoryTest {
 	@Before
 	public void setup() {
 		client = new MongoClient(new ServerAddress(serverAddress));
-		studentRepository = new StudentMongoRepository(client);
+		studentRepository = new StudentMongoRepository(client, SCHOOL_DB_NAME, STUDENT_COLLECTION_NAME);
 		MongoDatabase database = client.getDatabase(SCHOOL_DB_NAME);
 		// make sure we always start with a clean database
 		database.drop();
